@@ -1,5 +1,5 @@
 import sort from "../../code/sort/lesson2"
 
-test('oddSort', ()=>{
-    expect(sort([4,2,5,7,1,6])).toEqual([2,1,4,5,6,7])
+test('sort', ()=>{
+    expect(sort([3,2,1,5,6,4],2)).toBe(5)
 })
