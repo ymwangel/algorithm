@@ -193,7 +193,10 @@ execPush(1,2,3)
  * 线程池模式
 */
 
-// 工厂模式： 提供创建一个对象的接口
+/**
+ *  工厂模式： 提供创建一个对象的接口
+ * 应用： Vue.component 异步组建、React.createElement
+ * */ 
 class Product {
   constructor(name) {
     this.name = name
@@ -210,7 +213,10 @@ class Creator { //工厂对象
 const creator = new Creator()
 const p =creator.create('lisi')
 
-// 单例模式
+/**
+ * 单例模式
+ * 应用：Vuex 中的 Store 、Redux中 Store
+ */
 class SingleObject {
   login() {}
 }
@@ -227,7 +233,10 @@ const obj1 = SingleObject.getInstance()
 const obj2 = SingleObject.getInstance()
 console.log('obj1 === obj2: ',obj1 === obj2)
 
-// 适配器模式： 用来解决 两个接口 不兼容问题， 由一个对象来包装 不兼容的对象，比如：参数转化，允许直接访问
+/**
+ * 适配器模式： 用来解决 两个接口 不兼容问题， 由一个对象来包装 不兼容的对象，比如：参数转化，允许直接访问
+ * 应用场景：Vue 的 computed 、
+ */
 class Adapter {
   specificRequest(){
     return 'Made in Germany'
@@ -244,14 +253,105 @@ class Target {
 }
 const target = new Target()
 console.log(target.request())
-/**
- * ======================================================================================================================================================
- */
-
 
 /**
  * ======================================================================================================================================================
  */
+
+/** 装饰器模式(AOP)：在不改变对象自身的基础上， 动态的给某个对象 添加新的功能，同时又不改变其他接口 
+ * 应用场景：ES7装饰器、
+ * 
+*/
+class Plane {
+  fire() {
+    console.log('Fire an ordinary missile')
+  }
+}
+class Missile {
+  constructor(plane) {
+    this.plane = plane
+  }
+  fire(){
+    this.plane.fire()
+    console.log('Fire an missile')
+  }
+}
+let plane = new Plane()
+plane = new Missile(plane)
+console.log(plane.fire())
+
+/**利用 AOP 给函数 动态添加功能，即Function的 after 或者 before */
+Function.prototype.before = function(beforeFn) {
+  const _self = this
+  return function() {
+    beforeFn.apply(this,arguments)
+    return _self.apply(this,arguments)
+  }
+}
+Function.prototype.after = function(afterFn){
+  const _self = this
+  return function(){
+    // afterFn.apply(this, arguments)
+    const ret = _self.apply(this,arguments)
+    afterFn.apply(this, arguments)
+    return ret
+  }
+}
+let func = function(){
+  console.log('2')
+}
+func = func.before(function(){
+  console.log(1)
+}).after(function(){
+  console.log('3')
+})
+func()
+
+/**
+ * ======================================================================================================================================================
+ */
+
+/**
+ * 代理模式： 为其他对象 提供一种代理，以便控制对这个对象对访问，不能直接访问目标对象
+ * 应用：ES6 的proxy 、Vuex 中对于getters 访问、图片预加载
+ */
+
+class Flower{
+  constructor(name){
+    this.name = name
+  }
+}
+class Jack {
+  constructor(target){
+    this.target = target
+  }
+  sendFlower(target){
+    const flower = new Flower('rose')
+    this.target.receiveFlower(flower)
+  }
+}
+
+class Rose{
+  receiveFlower(flower){
+    console.log('received : ' + flower)
+  }
+}
+
+class ProxyObj {
+  constructor () {
+    this.target = new Rose()
+  }
+  receiveFlower(flower){
+    this.target.receiveFlower(flower.name)
+  }
+  sendFlower(flower){
+    this.target.receiveFlower(flower)
+  }
+}
+
+const proxyObj = new ProxyObj()
+const jack = new Jack(proxyObj)
+jack.sendFlower(proxyObj)
 
 /**
  * ======================================================================================================================================================
