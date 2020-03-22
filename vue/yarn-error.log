@@ -1,0 +1,47 @@
+Arguments: 
+  /usr/local/bin/node /usr/local/bin/yarn add babel-preset-env
+
+PATH: 
+  /usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+
+Yarn version: 
+  1.9.4
+
+Node version: 
+  10.16.3
+
+Platform: 
+  darwin x64
+
+Trace: 
+  Error: EACCES: permission denied, mkdir '/Users/wangyanmin/workspace/algorithm/vue/node_modules/loose-envify/node_modules'
+
+npm manifest: 
+  {
+    "name": "algorithm",
+    "version": "1.0.0",
+    "description": "algorithm",
+    "main": "index.js",
+    "scripts": {
+      "build": "babel 1/1.js --out-file 1/dist/app.js"
+    },
+    "keywords": [
+      "vue"
+    ],
+    "author": "wangyanmin",
+    "license": "ISC",
+    "dependencies": {
+      "babel-preset-es2015": "^6.24.1"
+    },
+    "devDependencies": {
+      "babel-core": "^6.26.3",
+      "babel-polyfill": "^6.26.0",
+      "babel-preset-env": "^1.7.0"
+    }
+  }
+
+yarn manifest: 
+  No manifest
+
+Lockfile: 
+  No lockfile

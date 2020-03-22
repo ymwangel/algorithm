@@ -17,3 +17,12 @@ const insertSort = (arr) =>{
     return arr
 }
 console.log(insertSort(list))
+
+/**
+ * 优化：二分插入排序
+ */
+const bisectionInsertSort = (arr) => {
+    
+    return arr
+}
+console.log(bisectionInsertSort(list))

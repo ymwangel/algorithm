@@ -17,6 +17,26 @@ function parseParam(url) {
 }
 
 /**
+ * =======================================================================================================================
+ */
+
+/**
+ * Symbol: 唯一性
+ * Symbol 与 Symbol.for()却别
+ * Symbol.for() 属性是全局的；Symbol()属性是局部的
+ * Symbol属性只能用 Symbol.getOwnPropertySymbols(obj)来获取symbol属性
+ * Reflect.ownKeys(obj)获取所有的共有属性，包括symbol属性
+ */
+
+/**
+ * ======================================================================================================================================================
+ */
+
+ /**
+  * Reflect
+  */
+
+/**
  * ======================================================================================================================================================
  */
 
@@ -29,6 +49,40 @@ function parseParam(url) {
  * 5. 如果构造函数没有返回其他对象，那么 new  表达式中的函数调用 会 自动返回这个新对象 newObj，如果返回的不是对象，将被忽略
  */
 
+function newOperator(ctor) {
+  if(typeof ctor !== 'function') {
+    throw 'newOperator function the first param must be a function'
+  }
+  newOperator.target = ctor
+  var newObj = Object.create(ctor.prototype)  
+  console.log(newObj.__proto__ == ctor.prototype)  // newObj.__proto__ = ctor.prototype
+  var argsArr = [].slice.call(arguments,1)
+  var ctorReturnResult = ctor.apply(newObj, argsArr)  // 将 当前的 this 指向 newObj, 查看ctor()返回值类型
+  var isObject = typeof ctorReturnResult === 'object' && ctorReturnResult !== null
+  var isFunction = typeof ctorReturnResult === 'function'
+  if(isObject || isFunction) {
+    return ctorReturnResult
+  }
+  return newObj
+}
+function Student(name,age) {
+  this.name = name
+  this.age = age
+}
+Student.prototype.doSth = function() {
+  console.log(this.name)
+}
+var student1 = newOperator(Student, '若' ,18)
+var student2 = newOperator(Student, '川' ,18)
+console.log(student1,student2)
+student1.doSth()
+student2.doSth()
+console.log(student1.__proto__ === Student.prototype) //true
+console.log(student2.__proto__ === Student.prototype) //true
+console.log('student1 instanceof Student', student1 instanceof Student) //true
+console.log(Object.getPrototypeOf(student1) === Student.prototype)  //true
+
+
 /**
  * ======================================================================================================================================================
  */
@@ -36,7 +90,7 @@ function parseParam(url) {
 /**
  * apply和call的模拟实现
  * apply原理：
- * 1.将函数设为对象的属性
+ * 1.将函数设为对象的属性(改变this)
  * 2.执行该函数
  * 3.删除该函数
 */
@@ -58,19 +112,43 @@ Function.prototype.apply = Function.prototype.apply || function(context,arr) {
   return result
 }
 
+Function.prototype.call = Function.prototype.call || function(context) {
+  var context = new Object(context) || window
+  context.fn = this
+  var args = []
+  for(let i=0;i<arguments.length-1;i++){
+    args[i] = arguments[i+1]
+  }
+  return this.apply(context,args)
+}
+
 /**
  * 用 apply 实现 bind
- * bind 原理
- * 1. 设置 this 为给定的值，返回一个函数
- * 2. 调用新函数时，将给定的参数列表 作为原函数 的参数序列的 前若干项
+ * bind MDN 原理
+ * 1. 改变原函数的this指向，即绑定this
+ * 2. 返回原函数的拷贝（称为绑定函数）
+ * 3. 正常调用绑定函数时，将给定的参数列表 作为原函数 的参数序列的 前若干项；若new调用绑定函数，thisArg参数无效，也就是new操作符修改this指向的优先级更高
 */
 
-Function.prototype.bind = Function.prototype.bind || function (...rest1) {
-  var self = this
-  const context = rest1.shift()
-  return function(...rest2){
-    self.apply(context,[...rest1,...rest2] )
+Function.prototype.bind = function(thisArg) {
+  if(typeof this !== 'function') {
+    throw new TypeError('Function.prototype.bind - what is trying to be bound is not callable')
   }
+  var args = [].slice.call(arguments,1)
+  var self = this
+  var Empty = function () {}
+  var fBound = function() {
+    return self.apply(
+      this instanceof Empty ? this : thisArg,
+      args.concat([].slice.call(arguments))
+    )
+  }
+  // 维护原型关系
+  if(this.prototype) { //如果this是箭头函数 ，是没有原型的
+    Empty.prototype = self.prototype
+  }
+  fBound.prototype = new Empty()
+  return fBound
 }
 
 /**
@@ -137,7 +215,7 @@ console.log(result.valueOf(), result+ 10) //99 109
 
 /**
  * 反柯里化
- * 1. 延迟传餐
+ * 1. 延迟传参数
  * 2. 扩大适用范围，扩展
  */
 function unCurrying (fn){
@@ -430,3 +508,4 @@ console.log(addBinary("101000001001001101100100000101011110110110011011101111111
 "110101001011101110001111100110001010100001101011101010000011011011001011101111001100000011011110011"))
 console.log(addBinary('1100','1101'))
 console.log(addBinary('11','1'))
+
