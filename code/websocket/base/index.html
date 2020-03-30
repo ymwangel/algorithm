@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket</title>
+    <script src="/socket.io-client/dist/socket.io.js"></script>
+    <style>
+        .box{
+            width: 45%;
+            display: inline-block;
+            vertical-align: top;
+        }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <div>发送信息页面</div>
+        <input id="input" placeholder="请输入要发送的信息" />
+        <button onclick="postMessage()">发送</button>
+    </div>
+    
+    <script>
+        const socket = io("http://localhost:8889");
+        
+        function postMessage() {
+            let content = document.getElementById('input').value
+            socket.emit("recive message", {
+                message: content,
+                time: new Date()
+            });
+        }
+    </script>
+</body>
+</html>

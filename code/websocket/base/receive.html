@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket</title>
+    <script src="/socket.io-client/dist/socket.io.js"></script>
+</head>
+<body>
+    <div>接收信息页面</div>
+    <!-- <button onclick="postMessage()">发送消息</button> -->
+    <ol id="ol"></ol>
+    <script>
+        const socket = io("http://localhost:8889");
+        function postMessage() {
+            socket.emit("recive message", {
+                message: 'receive html content',
+                time: new Date()
+            });
+        }
+        socket.on("content", function(data) {
+            data = data.message
+            let ol = document.getElementById('ol')
+            let li = document.createElement('li')
+            li.innerHTML = '接收到的消息: ' + data.message + ';    时间: ' + data.time
+            ol.append(li)
+        });
+    </script>
+</body>
+</html>
