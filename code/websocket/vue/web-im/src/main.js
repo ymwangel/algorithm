@@ -3,7 +3,7 @@
 import Vue from 'vue'
 import App from './App'
 import router from './router'
-import io from "../plugins/socket"
+import io from "socket.io-client/lib/index.js"
 
 Vue.prototype.io = io
 Vue.config.productionTip = false
