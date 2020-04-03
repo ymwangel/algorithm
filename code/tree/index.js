@@ -3,6 +3,7 @@ var Queue = require('../queue/index')
 
 /**
  * 二叉查找树(二叉排序树)
+ * TODO: 深度优先、广度优先
  */
 class BinNode { //节点
     constructor(data) {

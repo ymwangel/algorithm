@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hash 路由</title>
+</head>
+<body>
+    <ul>
+        <li><a href="#/">turn yellow</a></li>
+        <li> <a href="#/blue">turn blue</a></li>
+        <li><a href="#/green">turn green</a></li>
+    </ul>
+    <script>
+        class Routers {
+            constructor() {
+                this.routes = {}
+                this.currentUrl  = ''
+                this.history = []
+                this.isBack = false
+                this.refresh = this.refresh.bind(this)
+                this.backOff = this.backOff.bind(this)
+                
+                this.currentIndex = this.history.length - 1
+                window.addEventListener('load', this.refresh, false)
+                window.addEventListener('hashchange', this.refresh, false)
+            }
+            route(path, callback) {
+                this.routes[path] = callback || function() {}
+            }
+            refresh() {
+                this.currentUrl = location.hash.slice('1') || '/'
+                if(!this.isBack) {
+                    this.history.push(this.currentUrl)
+                    this.currentIndex = this.currentIndex++
+                }
+                this.routes[this.currentUrl]()
+                this.isBack = false
+            }
+            backOff() {
+                this.isBack = true
+                // 如果指针小于0的话就不存在对应hash路由了,因此锁定指针为0即可
+                this.currentIndex <= 0
+                ? (this.currentIndex = 0)
+                : (this.currentIndex = this.currentIndex - 1);
+                // 随着后退,location.hash也应该随之变化
+                this.history.pop()
+                location.hash = `#${this.history[this.currentIndex]}`;
+
+                // 执行指针目前指向hash路由对应的callback
+                this.routes[this.history[this.currentIndex]]();
+            }
+        }
+        window.Router = new Routers();
+        var content = document.querySelector('body');
+        
+        function changeBgColor(color) {
+            content.style.backgroundColor = color;
+        }
+        Router.route('/', function() {
+            changeBgColor('yellow');
+        });
+        Router.route('/blue', function() {
+            changeBgColor('blue');
+        });
+        Router.route('/green', function() {
+            changeBgColor('green');
+        });
+    </script>
+</body>
+</html>

@@ -20,6 +20,10 @@ export default new Router({
       path: '/chat',
       name: 'CHAT',
       component: Chat
+    }, {
+      path: '/hashTest',
+      name: 'HashTest',
+      component: _=>import('@/components/hashTest.vue')
     }
   ]
 })
