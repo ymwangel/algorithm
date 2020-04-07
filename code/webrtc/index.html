@@ -4,9 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>webrtc</title>
-    <script src="./js/client.js"></script>
+    <!-- <script src="./js/client.js"></script> -->
+    <style>
+        video {
+            width: 400px;
+            height: 300px;
+        }
+    </style>
 </head>
 <body>
-    <div>sdjf</div>
+    <div>
+        <video id="localvideo" autoplay playsinline></video>
+        <video id="remotevideo" autoplay playsinline></video>
+    </div>
+    <div>
+        <button id="start"> Start </button>
+        <button id="call"> Call </button> 
+        <button id="hangup"> HangUp </button> 
+    </div>
+    <!-- <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script> -->
+    <script src="./js/main.js"></script>
 </body>
 </html>

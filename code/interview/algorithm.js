@@ -310,3 +310,14 @@ const bigNumberSumOptimization = (num1, num2) => {
 console.log(bigNumberSumOptimization(926709752318, 95481253129))
 console.log('===========================')
 
+/**
+ * 求两个单链表的和
+ * 题目：
+ *      两个单链表（singly linked list），每一个节点里面一个0-9的数字， 输入就相当于两个大数了。然后返回这两个数的和（一个新list）。
+ * 注意：
+ *      1. 这两个输入的list 长度相等。 
+ * 要求是：
+ *      1. 不用递归。
+ *      2. 要求算法在最好的情况下，只遍历两个list一次， 最差的情况下两遍。
+ */
+
