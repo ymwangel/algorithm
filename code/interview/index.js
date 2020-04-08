@@ -508,4 +508,138 @@ console.log(addBinary("101000001001001101100100000101011110110110011011101111111
 "110101001011101110001111100110001010100001101011101010000011011011001011101111001100000011011110011"))
 console.log(addBinary('1100','1101'))
 console.log(addBinary('11','1'))
+console.log('==============================')
 
+/**
+ * 实现promise
+ */
+
+const isFunction = variable => typeof variable === 'function'
+const PENDING = 'PENDING'
+const FULFILLED = 'FULFILLED'
+const REJECTED = 'REJECTED'
+ class MyPromise {
+  constructor(handle) {
+    if(!isFunction(handle)) {
+      throw new Error('MyPromise must accept a function as parameter')
+    }
+    // 添加状态
+    this._status = PENDING
+    // 添加值
+    this._value = undefined
+
+    this._fulfilledQueues = []
+    this._rejectedQueues = []
+
+    //执行 handle
+    try {
+      handle(this._resolve.bind(this),this._reject.bind(this))
+    }catch(e) {
+      this._reject(e)
+    }
+  }
+
+  _resolve(val) {
+    if(this._status !== PENDING) return
+    // 依次执行成功队列中的函数，并清空队列
+    const run = () => {
+      this._status = FULFILLED
+      this._value = val
+      let cb 
+      while(cb = this._fulfilledQueues.shift()) {
+        cb(val)
+      }
+    }
+    setTimeout(run,0)
+  }
+
+  _reject(err) {
+    if(this._status !== PENDING) return
+    const run = () => {
+      
+      this._status = REJECTED
+      this._value = err
+      let cb 
+      while(cb = this._rejectedQueues.shift()) {
+        cb(err)
+      }
+    }
+    setTimeout(run, 0)
+  }
+
+  then(onFulfilled, onRejected) {
+    const {_status, _value} = this
+    return new MyPromise((onFulfilledNext,onRejectedNext)=>{
+      let fulfilled = value => {
+        debugger
+        try {
+          if(!isFunction(onFulfilled)) {
+            onFulfilledNext(value)
+          }else {
+            let res = onFulfilled(value)
+            if(res instanceof MyPromise) {
+              res.then(onFulfilledNext,onRejectedNext)
+            }else {
+              onFulfilledNext(res)
+            }
+          }
+        }catch(err) {
+          onRejectedNext(err)
+        }
+      }
+      let rejected = error => {
+        try {
+          if(!isFunction(onRejected)) {
+            onRejectedNext(error)
+          }else {
+            let res = onRejected(error)
+            if(res instanceof MyPromise) {
+              res.then(onFulfilledNext,onRejectedNext)
+            }else {
+              onRejectedNext(error)
+            }
+          }
+        }catch(err) {
+          onRejectedNext(err)
+        }
+      }
+      switch(_status) {
+        case PENDING: 
+          debugger
+          this._fulfilledQueues.push(onFulfilled)
+          this._rejectedQueues.push(onRejected)
+          break;
+        case FULFILLED: 
+          debugger
+          fulfilled(_value)
+          break;
+        case REJECTED:
+          rejected(_value)
+          break;
+      } 
+    })
+  }
+}
+
+// var myPro = new MyPromise((resolve, reject) => {
+//   var s = 'test'
+//   resolve(s)
+// })
+// myPro.then(val=>{
+//   console.log(val)
+//   throw 'faled'
+// }).then(_=>{},err=>{
+//   console.log('err===',err)
+// })
+
+var pro = new Promise((resolve,reject)=> {
+  resolve('test')
+})
+pro.then(val=>{
+  console.log('val====', val)
+  throw 'failed'
+}).then(value => {
+  console.log('value===', value)
+},err=>{
+  console.log('err===', err)
+})

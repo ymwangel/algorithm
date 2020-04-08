@@ -311,13 +311,108 @@ console.log(bigNumberSumOptimization(926709752318, 95481253129))
 console.log('===========================')
 
 /**
- * 求两个单链表的和
- * 题目：
- *      两个单链表（singly linked list），每一个节点里面一个0-9的数字， 输入就相当于两个大数了。然后返回这两个数的和（一个新list）。
- * 注意：
- *      1. 这两个输入的list 长度相等。 
- * 要求是：
- *      1. 不用递归。
- *      2. 要求算法在最好的情况下，只遍历两个list一次， 最差的情况下两遍。
+ * 最长的回文子串
+ * 法一：暴力枚举法：事件复杂度：O(N^3), 空间复杂度： O(1)
+ * 法二：动态规划 ：时间负责度：O(N^2), 空间复杂度：O(N^2)
+ *  :i 从大到小的理由：
+ *      1. 如果i是从小到大，例如longestPalindrome3 中， dp[0][2] 依赖于 dp[1][1], 此时的dp[1][1] = 0，是false，所以判断不准
+ *      2. 而动态规划法中，从大到小，当计算dp[0][2]时 dp[1][1]已经计算出，
+ * 法三：中心扩散法 : 时间复杂度：O(N^2), 空间复杂度：O(N)
+ * 法四：中心扩散法优化：
+ * 
+ *      
  */
+
+const longestPalindrome1 = function(s) { //暴力枚举法
+    if(!s || s.length < 2) return s
+    let max = '';
+    for(let i=0;i<s.length;i++) {
+        for(let j=0;j<s.length;j++) {
+            let str = s.substr(i,j+1)
+            if(isPalindrome(str) && str.length>max.length) max = str
+        }
+    }
+    return max
+
+    function isPalindrome (str) {
+        let l=0;
+        let r = str.length-1
+        while(l<r) {
+            if(s[l] != s[r]) {
+                return false
+            }
+            l++
+            r--
+        }
+        return true
+    }
+}
+
+const longestPalindrome2 = function(s) { //动态规划法
+    let len = s.length
+    let res = ''
+    let dp = Array.from(new Array(len), ()=>new Array(len).fill(0))
+    for(let i=len-1;i>=0;i--) {
+        for(let j=i;j<len;j++) {
+            dp[i][j] = s[i] === s[j] && (j-i < 2 || dp[i+1][j-1])
+            if(dp[i][j] && j-i+1 > res.length) {
+                res = s.substring(i,j+1)
+            }
+        }
+    }
+    return res
+}
+const longestPalindrome3 = function(s) {// 错误的，
+    let len = s.length
+    let res = ''
+    let dp = Array.from(new Array(len), ()=>new Array(len).fill(0))
+    for(let i=0;i<len-1;i++) {
+        for(let j=i;j<len;j++) {
+            dp[i][j] = s[i] === s[j] && (j-i < 2 || dp[i+1][j-1]) 
+            if(dp[i][j] && j-i+1 > res.length) {
+                res = s.substring(i,j+1)
+                console.log('res===', res)
+            }
+        }
+    }
+    return res
+}
+const longestPalindrome4 = function(s) { //中心扩散法
+    if(s == null || s.length == 0) return ''
+    let length = s.length
+    let left = 0, right = 0, len = 1, maxStart = 0, maxLen = 0;
+    for(let i=0;i<length;i++) {
+        left = i - 1
+        right = i + 1
+        while(left >= 0 && s[left] === s[i]) {
+            len++
+            left--
+        }
+        while(right < length && s[right] === s[i]) {
+            len++
+            right++
+        }
+        while(left >= 0 && right < length && s[left] === s[right]) {
+            len = len + 2
+            left--
+            right++
+        }
+        if(len > maxLen) {
+            maxLen = len
+            maxStart = left
+        }
+        len = 1
+    }
+    return s.substring(maxStart , maxStart + maxLen + 1)
+}
+console.log(longestPalindrome1('babadef'))
+console.log(longestPalindrome2('babae'))
+console.log(longestPalindrome2('bb'))
+console.log(longestPalindrome2('a'))
+console.log(longestPalindrome4('babae'))
+
+console.log(longestPalindrome1('babaeabab'))
+console.log(longestPalindrome2('babaeabab'))
+console.log(longestPalindrome4('babaeabab'))
+console.log('===========================')
 
