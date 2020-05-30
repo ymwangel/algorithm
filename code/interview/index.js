@@ -512,6 +512,7 @@ console.log('==============================')
 
 /**
  * 实现promise
+ * https://juejin.im/post/5b16800fe51d4506ae719bae
  */
 
 const isFunction = variable => typeof variable === 'function'
@@ -556,7 +557,6 @@ const REJECTED = 'REJECTED'
   _reject(err) {
     if(this._status !== PENDING) return
     const run = () => {
-      
       this._status = REJECTED
       this._value = err
       let cb 
@@ -617,29 +617,202 @@ const REJECTED = 'REJECTED'
           rejected(_value)
           break;
       } 
+
     })
   }
 }
+console.log('==========')
 
-// var myPro = new MyPromise((resolve, reject) => {
-//   var s = 'test'
-//   resolve(s)
-// })
-// myPro.then(val=>{
-//   console.log(val)
-//   throw 'faled'
-// }).then(_=>{},err=>{
-//   console.log('err===',err)
-// })
+/**
+ * 发布订阅模式
+ */
 
-var pro = new Promise((resolve,reject)=> {
-  resolve('test')
-})
-pro.then(val=>{
-  console.log('val====', val)
-  throw 'failed'
-}).then(value => {
-  console.log('value===', value)
-},err=>{
-  console.log('err===', err)
-})
+let eventEmitter = {
+  list: {},
+  on(key,fn) {
+    if(!this.list[key]){
+      this.list[key] = []
+    }
+    this.list[key].push(fn)
+    return this
+  },
+  emit() {
+    let key = [].shift.call(arguments)
+    let fns = this.list[key]
+    if(!fns || fns.length == 0) return false
+    fns.shift().apply(this,arguments)
+    return this
+  },
+  once(event,fn) {
+    let _this = this
+    function on() {
+      _this.remove(event,fn)
+      fn.apply(_this,arguments)
+    }
+    _this.on(event, on)
+    return _this
+  },
+  remove(key,fn) {
+    let fns = this.list[key]
+    if(!fns) return false
+    if(!fn) {
+      fns && (fns.length = 0)
+    }else {
+      fns.forEach((cb,i)=>{
+        if (cb === fn) {
+          fns.splice(i, 1);
+        }
+      })
+    }
+  }
+}
+function user1(content) {
+  console.log('用户1订阅了', content)
+}
+function user2(content) {
+  console.log('用户2订阅了', content)
+}
+function user3(content) {
+  console.log('用户3订阅了', content)
+}
+function user4(content) {
+  console.log('用户4订阅了', content)
+}
+
+eventEmitter.on('article1', user1);
+eventEmitter.on('article1', user2);
+eventEmitter.on('article1', user3);
+
+eventEmitter.remove('article1', user2);
+
+eventEmitter.once('article2', user4)
+
+eventEmitter.emit('article1', 'Javascript 发布-订阅模式');
+eventEmitter.emit('article1', 'Javascript 发布-订阅模式');
+eventEmitter.emit('article2', 'Javascript 观察者模式');
+eventEmitter.emit('article2', 'Javascript 观察者模式');
+
+console.log('==============================')
+
+/**
+ * 实现instanceof 功能
+ * 核心：原型链的向上查找
+ */
+function myInstanceof(left,right) {
+  if(typeof left != 'object' || left === null) return false
+  let proto = Object.getPrototypeOf(left)
+  while(true) {
+    if(proto == null) return false
+    if(proto == right.prototype) return true
+    proto = Object.getPrototypeOf(proto)
+  }
+}
+
+/**
+ * 原生map实现
+ * 原生reduce实现
+ *  1. 初始值不传怎么处理
+ *  2. 回调函数的参数有哪些？返回值如何处理？
+ */
+Array.prototype.mapSelf = function(callbackFn, thisArg) {
+  if(this === null || this === undefined) {
+    throw new TypeError("Cannot read property 'map' of null or undefined")
+  }
+  if(Object.prototype.toString.call(callbackFn) !== "[object Function]"){
+    throw new TypeError(callbackFn + ' is not a function')
+  }
+  let obj = Object(this)
+  let T = thisArg
+  let len = obj.length >>> 0
+  let A = new Array(len)
+  for(let i=0;i<len;i++) {
+    if(i in obj) {
+      let iValue = obj[i]
+      let mappedValue = callbackFn.call(T,iValue,i,obj)
+      A[i] = mappedValue
+    }
+  }
+  return A
+}
+Array.prototype.reduceSelf = function(callbackFn, initialValue) {
+  if(this === null || this === undefined) {
+    throw new TypeError("Cannot read property 'map' of null or undefined")
+  }
+  if(Object.prototype.toString.call(callbackFn) !== "[object Function]"){
+    throw new TypeError(callbackFn + ' is not a function')
+  }
+  let obj = Object(this)
+  let len = obj.length >>> 0
+  let k = 0;
+  let accumulator = initialValue
+  if(accumulator == undefined) {
+    if(len == 0) {
+      throw new Error('Each element of the array is empty');
+    }
+    for(;k<len;k++) {
+      if(k in obj) {
+        console.log(k)
+        accumulator = obj[k]
+        k++
+        console.log('k=====',k)
+        break;
+      }
+    }
+  }
+  for(;k<len;k++) {
+    if(k in obj) {
+      accumulator = callbackFn.call(undefined, accumulator, obj[k], obj)
+    }
+  }
+  return accumulator
+}
+var testArr = [1,2,3]
+console.log(testArr.mapSelf(item => item + 2))
+console.log(testArr.reduceSelf((a,b) => a+b))
+
+
+var shape = {
+  radius: 10,
+  diameter() {
+      return this.radius * 2
+  },
+  perimeter: () => {
+      console.log(this)
+      return 2 * Math.PI * this.radius
+  },
+  deep: {
+      radius: 20,
+      diameter() {
+          return this.radius * 2
+      },
+      perimeter: () => {
+          console.log(this)
+          return 2 * Math.PI * this.radius
+      },
+  }
+}
+
+console.log(shape.diameter())  //20
+console.log(shape.perimeter()) //NaN
+console.log(shape.deep.diameter()) // 40
+console.log(shape.deep.perimeter()) //NaN
+
+function Foo() {
+  Foo.a = function() {
+    console.log(1)
+  }
+  this.a = function() {
+    console.log(2)
+  }
+}
+Foo.prototype.a = function() {
+  console.log(3)
+}
+Foo.a = function() {
+  console.log(4)
+}
+
+console.log(Foo.a())
+let obj = new Foo()
+console.log(obj.a())
+console.log(Foo.a())

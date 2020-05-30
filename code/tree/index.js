@@ -43,19 +43,19 @@ class BinarySearchTree {
         }
 
     }
-    preOrderTraversal(node) { //递归-前序遍历
+    preOrderTraversal(node) { //递归-前序遍历 （根节点->左节点->右节点）
         if(node == null) return
         this.preOrderTraversalArr.push(node.data)
         this.preOrderTraversal(node.left)
         this.preOrderTraversal(node.right)
     }
-    inOrderTraversal(node){ //递归-中序遍历
+    inOrderTraversal(node){ //递归-中序遍历  （左节点->根节点->右节点）
         if(node == null) return
         this.inOrderTraversal(node.left)
         this.inOrderTraversalArr.push(node.data)
         this.inOrderTraversal(node.right)
-    }
-    posOrderTraversal(node) { //递归-后序遍历
+    } 
+    posOrderTraversal(node) { //递归-后序遍历   （左节点->右节点->根节点）
         if(node == null) return
         this.posOrderTraversal(node.left)
         this.posOrderTraversal(node.right)
