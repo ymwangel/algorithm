@@ -8,7 +8,7 @@
             "type": "node",
             "request": "launch",
             "name": "Launch Program",
-            "program": "${workspaceFolder}/code/interview/test.js",
+            "program": "${workspaceFolder}/code/interview/algorithm2.js",
             "skipFiles": [
                 "<node_internals>/**"
             ]
