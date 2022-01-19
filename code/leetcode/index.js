@@ -486,4 +486,5 @@ console.log(fourSumCount1([1,2],[-2,-1],[-1,2],[0,2]))
  * 输入: "bbbbb"
  * 输出: 1  , b
  */
-const 
+// 在algorithm2.js中
+ 

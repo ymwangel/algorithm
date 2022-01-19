@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>mini-vue</title>
+</head>
+<body>
+  <div id="app">
+    <input type="text" v-model="school.name">
+    <div>{{school.name}} {{school.age}}</div>
+    <div v-on:click="countAge">count age</div>
+    <div v-on:click="changeName">change name</div>
+  </div>
+  
+  <script>
+
+    class Vue {
+      constructor(options) {
+        this.$el = options.el
+        this.$data = options.data()
+        new Observe(this.$data)
+        this.proxyVm(this.$data);
+        for (let key in options.methods) { // 将methods上的数据代理到vm上
+          Object.defineProperty(this, key, {
+            get() {
+              return options.methods[key]
+            }
+          })
+        }
+        new Compiler(this.$el, this)
+      }
+      proxyVm(data) {
+        for (let key in data) {
+          Object.defineProperty(this, key, {
+            get() {
+              return data[key];
+            },
+            set(newValue) {
+              data[key] = newValue;
+            }
+          })
+        }
+      }
+      
+    }
+
+    let CompileUtil = {
+      getContentValue(vm, expr) {
+        return expr.replace(/\{\{(.+?)\}\}/g, (...args) => {
+          console.log('args=====', args)
+          return this.getVal(vm, args[1]) // 重新获取最新值
+        })
+      },
+      text(node, expr, vm) {
+        let content = expr.replace(/\{\{(.+?)\}\}/g, (...args) => {
+          console.log('args=====', args)
+          new Watcher(vm, args[1], () => { // 每次匹配到一个就创建一个 Watcher对象
+            node.textContent = this.getContentValue(vm, expr)
+          })
+          return this.getVal(vm, args[1])
+        })
+        node.textContent = content // 替换文本节点的内容
+      },
+      getVal(vm, expr) {
+        return expr.split('.').reduce((data, current) => {
+          return data[current]
+        }, vm.$data)
+      },
+      model(node, expr, vm) {
+        new Watcher(vm, expr, newValue => {
+          node.value = newValue
+        })
+        const value = this.getVal(vm, expr) // 获取表达式的值
+        node.value = value // 对于v-model指令，直接给DOM的value属性赋值即可
+      },
+      on(node, expr, vm, eventName) {
+        let fn = vm[expr]
+        console.log(node)
+        if (eventName === 'click') {
+          node.addEventListener('click', fn.bind(vm))
+        }
+      }
+    }
+
+    class Dep {
+      constructor() {
+        this.subs = [] // 存放所有的watchers
+      }
+      addSub(watcher) {
+        this.subs.push(watcher)
+      }
+      notify() {
+        this.subs.forEach(watcher => {
+          watcher.update()
+        })
+      }
+    }
+
+    class Watcher {
+      constructor(vm, expr, cb) {
+        Dep.target = this // 每次创建Wacher对象的时候，将创建的Wacher对象在获取值的时候添加到dep中
+        this.vm = vm
+        this.expr = expr
+        this.cb = cb
+        // 默认先存放旧值
+        this.oldValue = this.get()
+        Dep.target = null // 添加Wacher对象后清空，防止每次获取数据的时候都添加Wacher对象
+      }
+      get() {
+        let value = CompileUtil.getVal(this.vm, this.expr)
+        return value
+      }
+      update() {
+        let newValue = CompileUtil.getVal(this.vm, this.expr)
+        if (newValue !== this.oldValue) {
+          this.cb(newValue)
+        }
+      }
+    }
+
+
+    class Compiler {
+      constructor(el, vm) {
+        this.el = document.querySelector(el)
+        this.vm = vm
+        let fragment = this.node2fragment(this.el)
+        this.compile(fragment)
+        this.el.appendChild(fragment)
+      }
+
+      isElementNode(node) {
+        return node.nodeType === 1
+      }
+
+      node2fragment(node) {
+        let fragment = document.createDocumentFragment()
+        let firstChild
+        while(firstChild = node.firstChild) {
+          fragment.appendChild(firstChild)
+        }
+        return fragment
+      }
+
+      compile(node) {
+        let childNodes = [...node.childNodes]
+        childNodes.forEach(child => {
+          if (this.isElementNode(child)) {
+            this.compileElement(child)
+            this.compile(child)
+          } else {
+            this.compileText(child)
+          }
+        })
+      }
+
+      isDirective(name) { // 判断属性名是vue指令，即以v开头
+        return name[0] === 'v' && name[1] === '-'
+      }
+
+      compileElement(node) {
+        let attributes = [...node.attributes]
+        attributes.forEach(attr => {
+          let {name, value:expr} = attr
+          if (this.isDirective(name)) {
+            let [, directive] = name.split('-')
+            let [directiveName, eventName] = directive.split(':')
+            CompileUtil[directiveName](node, expr, this.vm, eventName)
+          }
+        })
+      }
+
+      compileText(node) {
+        const content = node.textContent
+        if (/\{\{(.+?)\}\}/.test(content)) {
+          CompileUtil["text"](node, content, this.vm)
+        }
+      }
+    }
+
+    class Observe {
+      constructor(data) {
+        this.observe(data)
+      }
+      observe(data){
+        if (data && typeof data === "object") {
+          for (let key in data) {
+            this.defineReative(data, key, data[key])
+          }
+        }
+      }
+      defineReative(obj, key, value) {
+        let dep = new Dep()
+        this.observe(value)
+        Object.defineProperty(obj, key, {
+          get() {
+            Dep.target && dep.addSub(Dep.target) // 将创建的Wacher对象添加到发布者中
+            return value
+          },
+          set: (newValue) => {
+            if (newValue !== value) {
+              this.observe(newValue)
+              value = newValue
+              dep.notify()
+            }
+          }
+        })
+      }
+    }
+    
+
+    let vm = new Vue({
+      el: "#app",
+      data: function () {
+        return {
+          school: {
+            name: 'zf',
+            age: 10
+          }
+        }
+      },
+      methods: {
+        countAge() {
+          console.log(this)
+          this.$data.school.age = this.$data.school.age + 10
+        },
+        changeName() {
+          this.$data.school.name = 'wangcai'
+        }
+      }
+    })
+    
+  </script>
+</body>
+</html>
