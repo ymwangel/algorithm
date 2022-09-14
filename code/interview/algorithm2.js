@@ -13,7 +13,7 @@
  * 
  * 考察点：
  *   1. 组合的一种应用，注意算法复杂度
- *   2. 求取利润最大值
+ *   2. 求取利润最大值，所以可以 如法二中不断更新 currentMin
  */
 
 // 法一：复杂度：O(n*n)
@@ -55,64 +55,6 @@ function maxProfit (arr) {
  * 3. 实现一个 useState
  * TODO
  */
-
-/**
- * 4. 螺旋树
- */
-
-const spiralOrder = function (matrix) {
-  let m = matrix.length
-  if (m === 0) return []
-  if (m === 1) return matrix[0]
-  let n = matrix[0].length
-  if (n === 0) return []
-  if (n === 1) return matrix[0].map(item => item[0])
-
-  let min = 0
-  let maxRowIndex = n - 1
-  let maxColIndex = m - 1
-  let i, j;
-  const ans = []
-
-  while(maxColIndex >= min && maxRowIndex >= min) { // 当前行最大索引 和 列最大索引 不得小于最小索引
-    i = min // 从左上角开始
-    j = min
-
-    while(j < maxRowIndex) { // 从左向右
-      ans.push(matrix[i][j++])
-    }
-    while(i < maxColIndex) { // 从上向下
-      ans.push(matrix[i++][j])
-    }
-
-    ans.push(matrix[i][j]) //推入右下角元素
-
-    while(j > min && maxRowIndex > min) { // 如果不止1行，那么需要从右向左遍历
-      ans.push(matrix[i][--j])
-    }
-    while(i > min + 1 && maxRowIndex > min) { // 如果不止1列，那么需要从下向上遍历
-      ans.push(matrix[--i][j])
-    }
-    min++
-    maxRowIndex--
-    maxColIndex--
-  }
-  return ans
-}
-let arr = [
-  [ 1, 2, 3 ],
-  [ 4, 5, 6 ],
-  [ 7, 8, 9 ]
-  ]
-console.log(spiralOrder(arr))
-let arr1 = [
-  [1, 2, 3, 4],
-  [5, 6, 7, 8],
-  [9,10,11,12], 
-  [13,14,15,16]
-  ]
-  console.log(spiralOrder(arr1))
-
 /**
  * 5. 假设你正在爬楼梯。需要 n 阶你才能到达楼顶。每次你可以爬 1 或 2 个台阶。求有多少种方法
  */
@@ -212,7 +154,8 @@ const lengthOfLongestSubstring = function(s) {
     }
     // console.log(occ, rk)
     // 第i到rk个字符 是一个极长的无重复字符子串
-    ans = Math.max(ans, rk - i + 1)
+    ans = Math.max(ans, rk - i + 1) // 取最大值
+    console.log(ans)
   }
   return ans
 }
@@ -294,15 +237,6 @@ const getFirstBiggerEle2 = arr => {
 }
 console.log(getFirstBiggerEle([3, 4, 7, 10, 1, 2, 8])) // [4,7,10,null,2,8]
 console.log(getFirstBiggerEle2([3, 4, 7, 1, 2, 8])) 
-
-/**
- * 13. 1.打印一个二叉树中，所有根节点到叶子节点的路径
- * TODO
- */
-
-const printPath = (arr) => {
-
-}
 
 /**
  * 14.提供根节点到叶子节点的二维List数据，如何还原出对应的二叉树?
@@ -436,11 +370,199 @@ const deepClone = (target, map = new Map()) => {
 
 /**
  * 17. vdom的算法实现∶
- * 给你一个字符串"<div><div><p></p><div><span></span></div>"，写一个函数得出一个object的结果即ftag∶ diy. children∶ T】
+ * 给你一个字符串"<div><div><p></p><div><span></span></div>"，写一个函数得出一个object的结果即 tag∶ div. children∶ T】
+ * // vue的模版字符串 转 AST 语法树
  */
 
-const getVD = (string) => {
+// 开始标签头
+const startTagOpen = /^<([\w\-]+)/,
+// 开始标签尾
+startTagClose = /^\s*(\/?)>/, 
+// 标签属性
+attribute = /^\s*([^\s"'<>\/=]+)(?:\s*((?:=))\s*(?:"([^"]*)"+|'([^']*)'+|([^\s"'=<>`]+)))?/,
+// 结束标签
+endTag = /^<\/([\w\-]+)>/;
+
+var empty = makeMap('area,base,basefont,br,col,embed,frame,hr,img,' + 
+                    'input,isindex,keygen,link,meta,param,source,track,wbr');
+
+function makeMap (values) {
+    values = values.split(/,/);
+    var map = {};
+    values.forEach(function (value) {
+        map[value] = 1;
+    });
+    return function (value) {
+        return map[value.toLowerCase()] === 1;
+    };
+}
+// empty('input');    => true
+
+function parse(html) {
+  let root // AST跟节点
+  let currentParent // 当前父节点
+  let stack = [] // 节点栈
+  HTMLParser(html, {
+    start(tag, attrs, unary) {
+      let element = {
+        tag, 
+        attrs,
+        // [{name: 'class', value: 'xx'}, ...] => [{class: 'xx'}, ...]
+        attrsMap: attrs.reduce((cumulated, {name, value}) => {
+          cumulated[name] = value || true
+          return cumulated
+        }, {}),
+        parent: currentParent,
+        children: []
+      }
+
+      // 初始化根节点
+      if (root) {
+        root = element
+      }
+      // 有父节点，就把当前节点推入children数组
+      if (currentParent) {
+        currentParent.children.push(element)
+      }
+      // 不是自闭合标签
+      // 进入当前节点内部遍历，故currentParent 设为自身
+      if (!unary) {
+        currentParent = element
+        stack.push(element)
+      }
+    },
+    // 处理结束标签
+    end() {
+      // 出栈，重新赋值父节点
+      stack.length = -1
+      currentParent = stack[stack.length - 1]
+    },
+    // 处理文本节点
+    chars(text) {
+      text = currentParent.tag === 'pre' ? text
+        : text.trim() ? text: ' '
+      currentParent.children.push(text)
+    }
+  })
+  return root
+}
+
+const HTMLParser = (html, handler) => {
+  var tagStack = []
+  var index = 0
+  while(html) {
+    let textEnd = html.indexOf('<')
+    if (textEnd === 0) {
+      // 匹配开始标签
+      let startTagMatch = parseStartTag()
+      if (startTagMatch) {
+        hanlderStartTag(startTagMatch)
+        continue
+      }
+      let endTagMatch = html.match.endTag
+      if (endTagMatch) {
+        let curIndex = index
+        advance(endTagMatch[0].length)
+        parseEndTag(endTagMatch[1], curIndex, index)
+        continue
+      }
+    }
+
+    // 处理文本节点
+    var text, rest, next;
+    if (textEnd >= 0) {
+        rest = html.slice(textEnd);
+        while (
+            !endTag.test(rest) &&
+            !startTagOpen.test(rest)
+        ) {
+            // 处理小于号等其他文本
+            next = rest.indexOf('<', 1);
+            if (next < 0) break;
+            textEnd += next;
+            rest = html.slice(textEnd);
+        }
+        text = html.substring(0, textEnd);
+        advance(textEnd);
+    }
+    if (textEnd < 0) {
+        text = html;
+        html = '';
+    }
+    if (handler.chars) {
+        handler.chars(text);
+    }
+
+  }
+
+  function advance (n) {
+    index += n;    // index用于记录剩余字符串在原字符串中的位置
+    html = html.substring(n);
+  }
+
+  function parseStartTag () {
+    var start = html.match(startTagOpen);
+    if (start) {
+        var match = {
+            tagName: start[1],
+            attrs: [],
+            start: index
+        };
+        advance(start[0].length);
+        var end, attr;
+        // 未结束且匹配到标签属性
+        while (!(end = html.match(startTagClose)) && (attr = html.match(attribute))) {
+            advance(attr[0].length);
+            match.attrs.push(attr);    // 添加属性
+        }
+        if (end) {
+            advance(end[0].length);
+            match.end = index;
+            return match;
+        }
+    }
+  }
   
+  function hanlderStartTag (match) {
+    var tagName = match.tagName;
+    var unary = empty(tagName);
+    var attrs = match.attrs.map(attr => {
+        return {
+            name: attr[1],
+            value: attr[3] || attr[4] || attr[5] || ''
+        };
+    });
+    // 不是自闭标签
+    if (!unary) {
+        tagStack.push({ tag: tagName, attrs: attrs});
+    }
+    if (handler.start) {
+        handler.start(tagName, attrs, unary, match.start, match.end);
+    }
+  }
+  
+  function parseEndTag (tagName, start, end) {
+    var pos;
+    if (start == null) start = index;
+    if (end == null) end = index;
+    if (tagName) {
+        var needle = tagName.toLowerCase();
+        // 找到结束标签在标签栈的位置
+        for (pos = tagStack.length - 1; pos >= 0; pos--) {
+            if (tagStack[pos].tag.toLowerCase() === needle) {
+                break;
+            }
+        }
+    }
+    if (pos >= 0) {
+        for (var i = tagStack.length - 1; i >= pos; i--) {
+            if (handler.end) {
+                handler.end(tagStack[i].tag, start, end);
+            }
+        }
+        tagStack.length = pos;    // 标签栈出栈
+    }
+  }
 }
 
 /**
@@ -454,3 +576,91 @@ const getVD = (string) => {
 /**
  * 20. 打印二叉树层数
  */
+
+/**
+ * 21. 最长递增子序列
+ * 法一 动态规划：时间复杂度：O(n^2)；空间复杂度：O(n)O(n)，需要额外使用长度为 n 的 dp 数组。
+ * 法二：二分查找法： 好难
+ */
+
+// 法一：动态规划
+/**
+ * 
+ * 思路与算法：
+ *    定义 dp[i] 为考虑前 i 个元素，以第 i 个数字结尾的最长上升子序列的长度，注意 nums[i] 必须被选取。
+ *    我们从小到大计算 dp 数组的值，在计算 dp[i] 之前，我们已经计算出 dp[0…i−1] 的值，则状态转移方程为：
+ *      dp[i]=max(dp[j])+1,其中0≤j<i且num[j]<num[i]
+ *    即考虑往 dp[0…i−1] 中最长的上升子序列后面再加一个 nums[i]。由于 dp[j] 代表 nums[0…j] 中以nums[j] 结尾的最长上升子序列，
+ *    所以如果能从 dp[j] 这个状态转移过来，那么 nums[i] 必然要大于 nums[j]，才能将 nums[i] 放在nums[j] 后面以形成更长的上升子序列。
+ *    最后，整个数组的最长上升子序列即所有 dp[i] 中的最大值。
+ *        LISlength = max(dp[i]),其中0≤i<n
+ */
+ var lengthOfLIS = function (nums) {
+  const dp = new Array(nums.length).fill(1);
+  for (let i = 0; i < nums.length; i++) {
+    // i与i前面的元素比较
+    for (let j = 0; j < i; j++) {
+      // 找比i小的元素，找到一个，就让当前序列的最长子序列长度加1
+      if (nums[i] > nums[j]) {
+        dp[i] = Math.max(dp[i], dp[j] + 1);
+      }
+    }
+  }
+  console.log(dp)
+  // 找出最大的子序列
+  return Math.max(...dp);
+}
+console.log(lengthOfLIS([10,9,2,5,3,7,101,18]))
+
+
+/**
+ * 发布订阅模式
+ * 1. 餐馆订餐，可以定不同的餐 A、B、C
+ * 2. 完成之后，通知用户取餐
+ * 要求：
+ * 1. 先到先得
+ * 2. 可以一次完成一份餐，也可以一次完成多份餐
+ */
+
+ let eventEmitter = {
+  list: {},
+  on(event, fn) {
+    let _this = this
+    let val = this.list[event]
+    !val ? (this.list[event] = [fn]) : this.list[event].push(fn)
+    return _this
+  },
+  emit() {
+    let _this = this
+    let event = [].shift.call(arguments),
+      fns = _this.list[event];
+    if (!fns || fns.length === 0) {
+      return false
+    }
+    if (fns.length === 1) {
+      fns.shift().apply(_this, arguments)
+      return
+    }
+    fns.splice(0, arguments.length).forEach(fn => {
+      fn.apply(_this, arguments)
+    })
+    return _this
+  }
+}
+eventEmitter.on('A', (data) => {
+  console.log('A取餐--第一份', data)
+})
+eventEmitter.on('B', () => {
+  console.log('B取餐')
+})
+eventEmitter.on('C', () => {
+  console.log('C取餐')
+})
+eventEmitter.on('A', () => {
+  console.log('A取餐--第二份')
+})
+eventEmitter.emit('A', ['a', 'b'])
+eventEmitter.emit('B')
+eventEmitter.emit('C')
+eventEmitter.emit('A')
+eventEmitter.emit('B')

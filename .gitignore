@@ -2,3 +2,5 @@
 /vue/node_modules
 yarn.lock
 .DS_Store
+code/.DS_Store
+/.vscode

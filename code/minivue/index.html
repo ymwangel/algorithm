@@ -110,7 +110,7 @@
       }
       get() {
         let value = CompileUtil.getVal(this.vm, this.expr)
-        return value
+        console.log(value)
       }
       update() {
         let newValue = CompileUtil.getVal(this.vm, this.expr)
@@ -195,7 +195,7 @@
         this.observe(value)
         Object.defineProperty(obj, key, {
           get() {
-            Dep.target && dep.addSub(Dep.target) // 将创建的Wacher对象添加到发布者中
+            Dep.target && dep.addSub(Dep.target) // 进行依赖收集， Dep.target指向Wacher实例 将创建的Wacher对象添加到发布者中
             return value
           },
           set: (newValue) => {

@@ -1,5 +1,5 @@
 /**
- * 需求一：最小栈的实现
+ * 1. 需求一：最小栈的实现
  * 需求：实现一个栈，该栈有 出栈（pop）、入栈（push）、取得最小元素（getMin）3个方法。保证3个方法的时间复杂度为O(1)
  */
 
@@ -30,7 +30,7 @@ stack1.push(3)
 console.log(stack1.getMin())
 
 /**
- * 需求：如何用栈实现队列
+ * 2. 需求：如何用栈实现队列
  */
 
 class StackQueue {
@@ -54,15 +54,19 @@ class StackQueue {
         }
     }
 }
-var stackQueue = new StackQueue()
-stackQueue.enqueue(10)
-stackQueue.enqueue(9)
-stackQueue.enqueue(3)
-stackQueue.enqueue(25)
-console.log(stackQueue.dequeue())
-console.log(stackQueue.dequeue())
-console.log(stackQueue.dequeue())
-console.log(stackQueue.dequeue())
+// var stackQueue = new StackQueue()
+// stackQueue.enqueue(10)
+// stackQueue.enqueue(9)
+// stackQueue.enqueue(3)
+// stackQueue.enqueue(25)
+// console.log(stackQueue.dequeue())
+// console.log(stackQueue.dequeue())
+// console.log(stackQueue.dequeue())
+// console.log(stackQueue.dequeue())
+
+/**
+ * 3.
+ */
 
 
 
